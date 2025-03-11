@@ -6,6 +6,7 @@ import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -49,14 +50,21 @@ public class AtHttp {
     @SuppressWarnings("unchecked")
     public static <T> T generate(Class<T> interfaceClass, Map<String, String> variables) {
         try {
-            // Debug output
             System.out.println("Generating proxy for: " + interfaceClass.getName());
+            
+            Constructor[] constructors = interfaceClass.getDeclaredConstructors();
+            for (Constructor c : constructors) {
+                System.out.println("Found constructor: " + c.getName());
+            }
+
             for (Method m : interfaceClass.getDeclaredMethods()) {
                 System.out.println("Found method: " + m.getName());
             }
 
+
+
             return new ByteBuddy()
-                .subclass(interfaceClass, ConstructorStrategy.Default.DEFAULT_CONSTRUCTOR)
+                .subclass(interfaceClass)
                 .method(ElementMatchers.isAbstract())
                 .intercept(MethodDelegation.to(new AtHttpInterceptor(variables)))
                 .make()

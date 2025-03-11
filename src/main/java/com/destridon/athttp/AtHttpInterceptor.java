@@ -53,7 +53,7 @@ public class AtHttpInterceptor {
         System.out.println("Intercepting method: " + method.getName());
        
         // Handle other interfaces that may represent other exchange contained in the same class
-        if(method.getReturnType().isInterface() && method.getReturnType().getName().startsWith(method.getDeclaringClass().getName())) {
+        if(method.getReturnType().getName().startsWith(method.getDeclaringClass().getName())) {
         	return AtHttp.generate(method.getReturnType(), globalVariables);
         }
         
