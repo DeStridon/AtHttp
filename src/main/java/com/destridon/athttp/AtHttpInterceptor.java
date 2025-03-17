@@ -3,8 +3,6 @@ package com.destridon.athttp;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
 
 import java.lang.reflect.Method;
-import java.net.URI;
-import java.net.http.HttpRequest;
 
 import net.bytebuddy.implementation.bind.annotation.AllArguments;
 import net.bytebuddy.implementation.bind.annotation.SuperMethod;
@@ -19,14 +17,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.destridon.athttp.client.AtHttpClient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.net.http.HttpClient;
-import java.net.http.HttpResponse;
-
-
-
+import com.destridon.athttp.client.CachedHttpClient;
+import com.destridon.athttp.client.SpringRestClient;
 
 import com.google.common.collect.Lists;
 
@@ -36,11 +32,12 @@ import com.google.common.collect.Lists;
 public class AtHttpInterceptor {
 
     private Map<String, String> globalVariables;
-    private HttpClient httpClient = HttpClient.newHttpClient();
+    private AtHttpClient httpClient;
 
 
     public AtHttpInterceptor(Map<String, String> globalVariables) {
         this.globalVariables = globalVariables;
+        this.httpClient = new CachedHttpClient<SpringRestClient>(new SpringRestClient());
     }
 
     @RuntimeType
@@ -94,38 +91,46 @@ public class AtHttpInterceptor {
         url = injectVariables(url, variables);
 
         // Create and execute the HTTP request
-        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .method(httpMethod.toString(), HttpRequest.BodyPublishers.noBody());
+
+        AtHttpClient.Request request = new AtHttpClient.Request();
+        request.url = url;
+        request.method = httpMethod.toString();
+        request.headers = new HashMap<>();
+        
+
+
+        // HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+        //     .uri(URI.create(url))
+        //     .method(httpMethod.toString(), HttpRequest.BodyPublishers.noBody());
 
         // Add headers
         List<AtHttp.Header> headers = digHeaders(method);
         for(AtHttp.Header header : headers) {
-            requestBuilder.header(header.key(), injectVariables(header.value(), variables));
+            // requestBuilder.header(header.key(), injectVariables(header.value(), variables));
+            request.headers.put(header.key(), injectVariables(header.value(), variables));
         }
         
-        HttpResponse<String> response = httpClient.send(
-            requestBuilder.build(),
-            HttpResponse.BodyHandlers.ofString()
-        );
+        AtHttpClient.Response response = httpClient.send(request);
+  
+        // HttpResponse<String> response = httpClient.send(
+        //     requestBuilder.build(),
+        //     HttpResponse.BodyHandlers.ofString()
+        // );
 
         // Handle the response based on the method's return type
         Class<?> returnType = method.getReturnType();
         if (returnType == String.class) {
-            return response.body();
+            return response.body;
         } else if (returnType == void.class) {
             return null;
         } else if (returnType == int.class || returnType == Integer.class) {
-            return response.statusCode();
+            return response.code;
         }
 
         // Parse JSON response into return type using ObjectMapper with generic type information
         try {
             ObjectMapper mapper = new ObjectMapper();
-            return mapper.readValue(
-                response.body(), 
-                mapper.getTypeFactory().constructType(method.getGenericReturnType())
-            );
+            return mapper.readValue( response.body, mapper.getTypeFactory().constructType(method.getGenericReturnType()) );
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to parse response body", e);
         }
