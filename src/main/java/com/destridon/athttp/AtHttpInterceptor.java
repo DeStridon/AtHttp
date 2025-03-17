@@ -22,8 +22,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.destridon.athttp.client.CachedHttpClient;
-import com.destridon.athttp.client.SpringRestClient;
-
+import com.destridon.athttp.client.JavaNetHttpClient;
 import com.google.common.collect.Lists;
 
 
@@ -37,7 +36,7 @@ public class AtHttpInterceptor {
 
     public AtHttpInterceptor(Map<String, String> globalVariables) {
         this.globalVariables = globalVariables;
-        this.httpClient = new CachedHttpClient<SpringRestClient>(new SpringRestClient());
+        this.httpClient = new CachedHttpClient<JavaNetHttpClient>(new JavaNetHttpClient());
     }
 
     @RuntimeType
