@@ -60,11 +60,10 @@ public class AtHttp {
 
 
 
-    
+    /* Enables user to specify the path of the request */
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Path {
         String value() default "";
-        String accept() default "";
     }
    
 
@@ -81,6 +80,14 @@ public class AtHttp {
         String value();
     }
 
+    /* Enables user to specify the request headers */
+    @Target(ElementType.TYPE)
+	@Retention(RetentionPolicy.RUNTIME)
+	public @interface Headers {
+		Header[] value();
+	}
+
+    /* Enables user to specify the request headers */
     @Retention(RetentionPolicy.RUNTIME)
     @Repeatable(Headers.class)
     public @interface Header {
@@ -88,11 +95,7 @@ public class AtHttp {
         String value() default "";
     }
 
-    @Target(ElementType.TYPE)
-	@Retention(RetentionPolicy.RUNTIME)
-	public @interface Headers {
-		Header[] value();
-	}
+   
 
-    
+
 }
