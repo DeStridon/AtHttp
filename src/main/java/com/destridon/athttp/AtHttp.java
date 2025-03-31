@@ -7,39 +7,19 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
+
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+
 import java.util.Map;
 
 import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.agent.builder.AgentBuilder;
-import net.bytebuddy.description.annotation.AnnotationDescription;
-import net.bytebuddy.description.method.MethodDescription;
-import net.bytebuddy.description.method.ParameterDescription;
-import net.bytebuddy.description.modifier.Visibility;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.dynamic.ClassFileLocator;
-import net.bytebuddy.dynamic.DynamicType;
-import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
-import net.bytebuddy.dynamic.loading.ClassReloadingStrategy;
-import net.bytebuddy.dynamic.scaffold.InstrumentedType;
-import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
-import net.bytebuddy.implementation.*;
-import net.bytebuddy.implementation.bind.MethodDelegationBinder;
-import net.bytebuddy.implementation.bind.annotation.*;
-import net.bytebuddy.implementation.bytecode.ByteCodeAppender;
-import net.bytebuddy.implementation.bytecode.StackManipulation;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
-import net.bytebuddy.implementation.bytecode.assign.primitive.PrimitiveTypeAwareAssigner;
-import net.bytebuddy.implementation.bytecode.constant.IntegerConstant;
-import net.bytebuddy.implementation.bytecode.constant.TextConstant;
-import net.bytebuddy.implementation.bytecode.member.MethodInvocation;
-import net.bytebuddy.implementation.bytecode.member.MethodReturn;
-import net.bytebuddy.matcher.ElementMatchers;
-import net.bytebuddy.pool.TypePool;
 
-import net.bytebuddy.utility.JavaModule;
+import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
+
+import net.bytebuddy.implementation.*;
+
+import net.bytebuddy.matcher.ElementMatchers;
+
 
 
 
@@ -88,19 +68,17 @@ public class AtHttp {
     }
    
 
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface Variable {
-        String value() default "";
-    }
 
+    /* Enables user to specify the request parameters */
     @Retention(RetentionPolicy.RUNTIME)
     public @interface RequestParam {
-        String value() default "";
+        String defaultValue();
+        String alias() default "";
     }
     
     @Retention(RetentionPolicy.RUNTIME)
     public @interface RequestBody {
-        String value() default "";
+        String value();
     }
 
     @Retention(RetentionPolicy.RUNTIME)

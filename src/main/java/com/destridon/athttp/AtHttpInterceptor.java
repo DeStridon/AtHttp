@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -60,9 +61,11 @@ public class AtHttpInterceptor {
 	        for(int i = 0; i < args.length; i++) {
 	            Object arg = args[i];
 	            if (arg != null) {
-	                AtHttp.Variable variableAnnotation = method.getParameters()[i].getAnnotation(AtHttp.Variable.class);
-	                if (variableAnnotation != null) {
-	                    variables.put(variableAnnotation.value(), arg.toString());
+	                AtHttp.RequestParam requestParam = method.getParameters()[i].getAnnotation(AtHttp.RequestParam.class);
+	                if (requestParam != null) {
+                        String name = Optional.ofNullable(requestParam.alias()).orElse(method.getParameters()[i].getName());
+                        String value = arg != null ? arg.toString() : requestParam.defaultValue();                      
+                        variables.put(name, value);
 	                }
 	            }
 	        }
