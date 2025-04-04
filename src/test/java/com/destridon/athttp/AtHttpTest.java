@@ -9,12 +9,12 @@ import org.junit.jupiter.api.Test;
 public class AtHttpTest {
 
 
-    @AtHttp.Path(value = "/repos/{owner}/{repo}", accept = "application/vnd.github.v3+json")
+    @AtHttp.Path(value = "/repos/{owner}/{repo}")
     public static interface AtHttpRepository {
 
-        String getRepository(@AtHttp.Variable String owner, @AtHttp.Variable String repo);
+        String getRepository(@AtHttp.RequestParam String owner, @AtHttp.RequestParam String repo);
 
-        void patchRepository(@AtHttp.Variable String owner, @AtHttp.Variable String repo, @AtHttp.RequestParam String name, @AtHttp.RequestParam String description, @AtHttp.RequestParam String homepage);
+        void patchRepository(@AtHttp.RequestParam String owner, @AtHttp.RequestParam String repo, @AtHttp.RequestParam String name, @AtHttp.RequestParam String description, @AtHttp.RequestParam String homepage);
 
         @AtHttp.Path("sub")
         public static interface subInterface {

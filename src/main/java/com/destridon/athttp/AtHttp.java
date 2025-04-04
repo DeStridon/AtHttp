@@ -71,7 +71,7 @@ public class AtHttp {
     /* Enables user to specify the request parameters */
     @Retention(RetentionPolicy.RUNTIME)
     public @interface RequestParam {
-        String defaultValue();
+        String defaultValue() default "";
         String alias() default "";
     }
     
