@@ -12,6 +12,8 @@ import java.lang.reflect.Method;
 
 import java.util.Map;
 
+import com.destridon.athttp.client.AtHttpClient;
+
 import net.bytebuddy.ByteBuddy;
 
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
@@ -28,25 +30,13 @@ public class AtHttp {
     
 
     @SuppressWarnings("unchecked")
-    public static <T> T generate(Class<T> interfaceClass, Map<String, String> variables) {
+    public static <T> T generate(Class<T> interfaceClass, Map<String, String> variables, AtHttpClient client) {
         try {
-            System.out.println("Generating proxy for: " + interfaceClass.getName());
             
-            Constructor[] constructors = interfaceClass.getDeclaredConstructors();
-            for (Constructor c : constructors) {
-                System.out.println("Found constructor: " + c.getName());
-            }
-
-            for (Method m : interfaceClass.getDeclaredMethods()) {
-                System.out.println("Found method: " + m.getName());
-            }
-
-
-
             return new ByteBuddy()
                 .subclass(interfaceClass)
                 .method(ElementMatchers.isAbstract())
-                .intercept(MethodDelegation.to(new AtHttpInterceptor(variables)))
+                .intercept(MethodDelegation.to(new AtHttpInterceptor(variables, client)))
                 .make()
                 .load(interfaceClass.getClassLoader(), ClassLoadingStrategy.Default.INJECTION)
                 .getLoaded()
@@ -56,6 +46,10 @@ public class AtHttp {
             e.printStackTrace();
             throw new RuntimeException("Failed to generate proxy", e);
         }
+    }
+    
+    public static <T> T generate(Class<T> interfaceClass, Map<String, String> variables) {
+    	return generate(interfaceClass, variables, null);
     }
 
 

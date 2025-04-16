@@ -1,15 +1,6 @@
 package com.destridon.athttp;
 
-import net.bytebuddy.implementation.bind.annotation.RuntimeType;
-
 import java.lang.reflect.Method;
-
-import net.bytebuddy.implementation.bind.annotation.AllArguments;
-import net.bytebuddy.implementation.bind.annotation.SuperMethod;
-import net.bytebuddy.implementation.bind.annotation.Empty;
-import net.bytebuddy.implementation.bind.annotation.Origin;
-import net.bytebuddy.implementation.bind.annotation.This;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,13 +9,20 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.destridon.athttp.AtHttp.Path;
 import com.destridon.athttp.client.AtHttpClient;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.destridon.athttp.client.CachedHttpClient;
 import com.destridon.athttp.client.JavaNetHttpClient;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
+
+import net.bytebuddy.implementation.bind.annotation.AllArguments;
+import net.bytebuddy.implementation.bind.annotation.Empty;
+import net.bytebuddy.implementation.bind.annotation.Origin;
+import net.bytebuddy.implementation.bind.annotation.RuntimeType;
+import net.bytebuddy.implementation.bind.annotation.SuperMethod;
+import net.bytebuddy.implementation.bind.annotation.This;
 
 
 
@@ -35,9 +33,12 @@ public class AtHttpInterceptor {
     private AtHttpClient httpClient;
 
 
-    public AtHttpInterceptor(Map<String, String> globalVariables) {
+    public AtHttpInterceptor(Map<String, String> globalVariables, AtHttpClient client) {
         this.globalVariables = globalVariables;
-        this.httpClient = new CachedHttpClient<JavaNetHttpClient>(new JavaNetHttpClient());
+        if(client == null) {
+        	client = new CachedHttpClient<JavaNetHttpClient>(new JavaNetHttpClient());
+        }
+        this.httpClient = client;
     }
 
     @RuntimeType
@@ -47,13 +48,13 @@ public class AtHttpInterceptor {
                                  @SuperMethod(nullIfImpossible = true) Method superMethod,
                                  @Empty Object defaultValue) throws Throwable {
 
-        System.out.println("Intercepting method: " + method.getName());
-       
+               
         // Handle other interfaces that may represent other exchange contained in the same class
         if(method.getReturnType().getName().startsWith(method.getDeclaringClass().getName())) {
         	return AtHttp.generate(method.getReturnType(), globalVariables);
         }
         
+        String requestBody = null;
         
         // Handle variables
         Map<String, String> variables = new HashMap<>(globalVariables);
@@ -66,6 +67,10 @@ public class AtHttpInterceptor {
                         String name = Optional.ofNullable(requestParam.alias()).orElse(method.getParameters()[i].getName());
                         String value = arg != null ? arg.toString() : requestParam.defaultValue();                      
                         variables.put(name, value);
+	                }
+	                AtHttp.RequestBody requestBodyObject = method.getParameters()[i].getAnnotation(AtHttp.RequestBody.class);
+	                if(requestBodyObject != null) {
+	                	requestBody = new ObjectMapper().writeValueAsString(arg);
 	                }
 	            }
 	        }
@@ -84,20 +89,20 @@ public class AtHttpInterceptor {
 
         // Generate URL by getting all exchanges annotations, and building path by reversing the list and joining with "/"
         String url = Lists.reverse(exchanges).stream()
-            .map(x -> x.value())
+            .map(Path::value)
             .collect(Collectors.joining("/"))
             .replaceAll("//", "/");
         
         
-        // TODO : replace all variables
+        // Replace all variables
         url = injectVariables(url, variables);
-
+        
         // Create and execute the HTTP request
-
         AtHttpClient.Request request = new AtHttpClient.Request();
         request.url = url;
         request.method = httpMethod.toString();
         request.headers = new HashMap<>();
+        request.body = requestBody;
         
 
 
