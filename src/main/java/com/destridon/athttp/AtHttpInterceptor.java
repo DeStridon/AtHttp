@@ -5,9 +5,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.destridon.athttp.AtHttp.Path;
 import com.destridon.athttp.client.AtHttpClient;
@@ -64,8 +65,11 @@ public class AtHttpInterceptor {
 	            if (arg != null) {
 	                AtHttp.RequestParam requestParam = method.getParameters()[i].getAnnotation(AtHttp.RequestParam.class);
 	                if (requestParam != null) {
-                        String name = Optional.ofNullable(requestParam.alias()).orElse(method.getParameters()[i].getName());
-                        String value = arg != null ? arg.toString() : requestParam.defaultValue();                      
+	                	String name = method.getParameters()[i].getName();
+	                	if(StringUtils.isNotBlank(requestParam.value())) {
+	                		name = requestParam.value();
+	                	}
+                        String value = arg != null ? arg.toString() : requestParam.defaultContent();                      
                         variables.put(name, value);
 	                }
 	                AtHttp.RequestBody requestBodyObject = method.getParameters()[i].getAnnotation(AtHttp.RequestBody.class);
@@ -91,7 +95,7 @@ public class AtHttpInterceptor {
         String url = Lists.reverse(exchanges).stream()
             .map(Path::value)
             .collect(Collectors.joining("/"))
-            .replaceAll("//", "/");
+            .replaceAll("(?<!https?:)//", "/");
         
         
         // Replace all variables
