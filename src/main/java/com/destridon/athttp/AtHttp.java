@@ -70,9 +70,7 @@ public class AtHttp {
     }
     
     @Retention(RetentionPolicy.RUNTIME)
-    public @interface RequestBody {
-        String value();
-    }
+    public @interface RequestBody {}
 
     /* Enables user to specify the request headers */
     @Target(ElementType.TYPE)

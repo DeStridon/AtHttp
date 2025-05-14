@@ -14,6 +14,7 @@ import com.destridon.athttp.AtHttp.Path;
 import com.destridon.athttp.client.AtHttpClient;
 import com.destridon.athttp.client.CachedHttpClient;
 import com.destridon.athttp.client.JavaNetHttpClient;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
@@ -32,6 +33,7 @@ public class AtHttpInterceptor {
 
     private Map<String, String> globalVariables;
     private AtHttpClient httpClient;
+    private ObjectMapper mapper = new ObjectMapper();
 
 
     public AtHttpInterceptor(Map<String, String> globalVariables, AtHttpClient client) {
@@ -40,6 +42,7 @@ public class AtHttpInterceptor {
         	client = new CachedHttpClient<JavaNetHttpClient>(new JavaNetHttpClient());
         }
         this.httpClient = client;
+        mapper.setSerializationInclusion(Include.NON_NULL);
     }
 
     @RuntimeType
@@ -51,9 +54,12 @@ public class AtHttpInterceptor {
 
                
         // Handle other interfaces that may represent other exchange contained in the same class
-        if(method.getReturnType().getName().startsWith(method.getDeclaringClass().getName())) {
-        	return AtHttp.generate(method.getReturnType(), globalVariables);
-        }
+//        if(method.getReturnType().getSimpleName().startsWith(method.getDeclaringClass().getSimpleName())) {
+//        	String s1 = method.getReturnType().getSimpleName();
+//        	String s2 = method.getDeclaringClass().getSimpleName();
+//        	
+//        	return AtHttp.generate(method.getReturnType(), globalVariables);
+//        }
         
         String requestBody = null;
         
@@ -74,7 +80,7 @@ public class AtHttpInterceptor {
 	                }
 	                AtHttp.RequestBody requestBodyObject = method.getParameters()[i].getAnnotation(AtHttp.RequestBody.class);
 	                if(requestBodyObject != null) {
-	                	requestBody = new ObjectMapper().writeValueAsString(arg);
+	                	requestBody = mapper.writeValueAsString(arg);
 	                }
 	            }
 	        }
@@ -140,7 +146,6 @@ public class AtHttpInterceptor {
 
         // Parse JSON response into return type using ObjectMapper with generic type information
         try {
-            ObjectMapper mapper = new ObjectMapper();
             return mapper.readValue( response.body, mapper.getTypeFactory().constructType(method.getGenericReturnType()) );
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to parse response body", e);

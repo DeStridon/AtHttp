@@ -16,8 +16,14 @@ public class JavaNetHttpClient extends AtHttpClient {
 	public Response send(Request request) throws Exception {
 		
 		HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-	            .uri(URI.create(request.url))
-	            .method(request.method, HttpRequest.BodyPublishers.noBody());
+	            .uri(URI.create(request.url));
+		
+		if(request.body == null) {
+			requestBuilder.method(request.method, HttpRequest.BodyPublishers.noBody());
+		}
+		else {
+			requestBuilder.method(request.method, HttpRequest.BodyPublishers.ofString(request.body));
+		}
 		
 		for(Entry<String, String> header : request.headers.entrySet()) {
 			requestBuilder.header(header.getKey(), header.getValue());
