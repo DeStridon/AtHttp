@@ -16,7 +16,9 @@ import com.destridon.athttp.client.CachedHttpClient;
 import com.destridon.athttp.client.JavaNetHttpClient;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.collect.Lists;
 
 import net.bytebuddy.implementation.bind.annotation.AllArguments;
@@ -43,6 +45,12 @@ public class AtHttpInterceptor {
         }
         this.httpClient = client;
         mapper.setSerializationInclusion(Include.NON_NULL);
+        // used for 
+        mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
+        mapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
+        mapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
     }
 
     @RuntimeType
